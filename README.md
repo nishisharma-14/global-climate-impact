@@ -49,6 +49,12 @@ The analysis is designed around practical climate questions:
 pip install numpy pandas matplotlib seaborn scipy scikit-learn
 ```
 
+Or install from the pinned project file:
+
+```bash
+pip install -r requirements.txt
+```
+
 ## How To Run
 
 Run either script from the project root:
@@ -61,6 +67,12 @@ or
 
 ```bash
 python INTPRO.py
+```
+
+Optional: run with unbuffered output to view logs in real time.
+
+```bash
+python -u global_warming_project.py
 ```
 
 Both scripts will:
@@ -108,6 +120,23 @@ Both scripts will:
 - Add model comparison (Random Forest, XGBoost, etc.)
 - Include time-series forecasting methods
 - Export charts/results to a report folder automatically
+
+## Expected Outputs
+
+When the scripts run successfully, you should see:
+
+- section-wise console logs for each objective
+- statistical summaries and hypothesis test output
+- multiple charts including trend, distribution, and model diagnostics
+
+## Common Issues
+
+- `FileNotFoundError` for dataset:
+	Ensure `global_warming_dataset.csv` is in the project root.
+- plots not rendering:
+	Run from VS Code Python environment, or set a supported Matplotlib backend.
+- package import error:
+	Reinstall dependencies using `pip install -r requirements.txt`.
 
 ## Author
 
