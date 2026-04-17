@@ -12,6 +12,11 @@ from sklearn.metrics import mean_squared_error, r2_score
 sns.set_theme(style="whitegrid")
 plt.rcParams['figure.figsize'] = (10, 6)
 
+
+def safe_sample(series, n, random_state):
+    """Sample up to n rows without failing on short series."""
+    return series.sample(min(n, len(series)), random_state=random_state)
+
 #=====================================
 # Section 1 - Data Loading & Cleaning
 #=====================================
@@ -80,7 +85,7 @@ plt.title('Correlation Matrix — Global Warming Features',
           fontsize=14, fontweight='bold')
 plt.show()
 
-# create Emission_Category using pd.cut on raw CO2 values (needed for boxplot below)
+# create Emission_Category using pd.cut on raw CO2 values
 df['Emission_Category'] = pd.cut(df['CO2_Emissions'],
                                   bins=3,
                                   labels=['Low', 'Medium', 'High'])
@@ -146,7 +151,7 @@ for ax, col in zip(axes, outlier_cols):
 plt.suptitle('Outlier Boxplots — Key Features', fontsize=13, fontweight='bold')
 plt.show()
 
-print("\n[OBJ 1]  Complete\n")
+print("\n OBJ 1 Complete\n")
 
 #==================================================================================
 # Objective 2 - Testing whether CO₂ emissions significantly changed after 1980)
@@ -160,8 +165,8 @@ print("=" * 65)
 df['Era'] = np.where(df['Year'] < 1980, 'Pre-1980', 'Post-1980')
 
 print("\n── T-Test : CO2 Emissions — Pre-1980 vs Post-1980 ──")
-pre  = df[df['Era'] == 'Pre-1980' ]['CO2_Emissions'].sample(1000, random_state=1)
-post = df[df['Era'] == 'Post-1980']['CO2_Emissions'].sample(1000, random_state=2)
+pre  = safe_sample(df[df['Era'] == 'Pre-1980' ]['CO2_Emissions'], 1000, 1)
+post = safe_sample(df[df['Era'] == 'Post-1980']['CO2_Emissions'], 1000, 2)
 t_stat, t_p = ttest_ind(pre, post)
 print(f"  Pre-1980  mean  : {pre.mean():,.2f}")
 print(f"  Post-1980 mean  : {post.mean():,.2f}")
@@ -169,7 +174,7 @@ print(f"  T-statistic     : {t_stat:.4f}")
 print(f"  p-value         : {t_p:.4e}")
 print(f"  Result : {'Significant difference (Reject H0)' if t_p < 0.05 else 'No significant difference (Fail to Reject H0)'}")
 
-print("\n[OBJ 2]  Complete\n")
+print("\n OBJ 2  Complete\n")
 
 #================================================================================
 # Objective 3- Checking how temperature anomaly is distributed across the dataset
@@ -184,7 +189,7 @@ print("\n── Normal Distribution — Temperature_Anomaly ──")
 mu, sigma = df['Temperature_Anomaly'].mean(), df['Temperature_Anomaly'].std()
 x_n = np.linspace(mu - 4*sigma, mu + 4*sigma, 300)
 plt.figure(figsize=(10, 5))
-plt.hist(df['Temperature_Anomaly'].sample(5000, random_state=1),
+plt.hist(safe_sample(df['Temperature_Anomaly'], 5000, 1),
          bins=50, density=True, color='steelblue', alpha=0.6, label='Empirical')
 plt.plot(x_n, norm.pdf(x_n, mu, sigma), 'r-', linewidth=2,
          label=f'Normal PDF  mu={mu:.2f}  sigma={sigma:.2f}')
@@ -194,7 +199,7 @@ plt.ylabel('Density')
 plt.show()
 print(f"  mu={mu:.4f}   sigma={sigma:.4f}")
 
-print("\n[OBJ 3]  Complete\n")
+print("\n OBJ 3   Complete\n")
 
 #==================================================================================
 # Objective 4 - Predicting average temperature using climate and emission features
@@ -235,7 +240,7 @@ plt.xlabel('Actual')
 plt.ylabel('Predicted')
 plt.show()
 
-print("\n[OBJ 4]  Complete\n")
+print("\n OBJ 4 Complete\n")
 
 #================================================================================
 # Objective 5 - Analysing how policy scores vary across different emission levels
@@ -262,6 +267,7 @@ plt.title('Policy Score Distribution — Low vs High Emitters')
 plt.xlabel('Policy Score')
 plt.ylabel('Density')
 plt.show()
+print("\n OBJ 5 Complete\n")
 
 
 # ============================================
@@ -272,30 +278,23 @@ print("\n" + "=" * 60)
 print("OBJECTIVE 6: Urbanization Impact Analysis")
 print("=" * 60)
 
-# Step 1: Create Urbanization Categories
 df['Urban_Level'] = pd.cut(df['Urbanization'],
                            bins=[0, 50, 100],
                            labels=['Low', 'High'])
 
-# Step 2: GroupBy Analysis
 result = df.groupby('Urban_Level')[['Per_Capita_Emissions', 'Waste_Management']].mean()
-
 print("\nMean Values by Urban Level:\n")
 print(result)
-
-# Step 3: Bar Plot
 result.plot(kind='bar')
-
 plt.title("Urbanization vs Environmental Impact")
 plt.xlabel("Urban Level")
 plt.ylabel("Mean Values")
-
 plt.show()
 
-# Step 4: Simple Comparison (Optional Stats)
 low = df[df['Urban_Level'] == 'Low']['Per_Capita_Emissions']
 high = df[df['Urban_Level'] == 'High']['Per_Capita_Emissions']
 
 print("\nAverage Emissions:")
 print("Low Urbanization:", low.mean())
 print("High Urbanization:", high.mean())
+print("\n OBJ 6 Complete\n")
