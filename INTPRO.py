@@ -3,15 +3,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import ttest_ind, norm
-from sklearn.linear_model    import LogisticRegression
+from sklearn.linear_model    import LinearRegression
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing   import StandardScaler
-from sklearn.metrics         import classification_report
+from sklearn.preprocessing  import StandardScaler
+from sklearn.metrics import classification_report
+from sklearn.metrics import mean_squared_error, r2_score
 
 
 sns.set_theme(style="whitegrid")
 plt.rcParams['figure.figsize'] = (10, 6)
-
 
 # DATA MANIPULATION WITH NumPy & Pandas
 
@@ -114,35 +114,6 @@ plt.ylabel('Temperature Anomaly (C)')
 plt.tight_layout()
 plt.show()
  
-# ── Plot 5 : Scatter — CO2 vs Sea Level Rise by Era (Seaborn) ───────
-sample = df.sample(3000, random_state=42)
-plt.figure(figsize=(10, 6))
-sns.scatterplot(data=sample, x='CO2_Emissions', y='Sea_Level_Rise',
-                hue='Era',
-                palette={'Pre-1980': '#3498db', 'Post-1980': '#e74c3c'},
-                alpha=0.55, s=25)
-plt.title('CO2 Emissions vs Sea Level Rise  (Pre / Post 1980)',
-          fontsize=14, fontweight='bold')
-plt.tight_layout()
-plt.show()
- 
-# ── Plot 6 : Bar — Avg CO2 Emissions by Decade (Seaborn) ────────────
-decade_co2 = df.groupby('Decade')['CO2_Emissions'].mean().reset_index()
-plt.figure(figsize=(12, 5))
-sns.barplot(data=decade_co2, x='Decade', y='CO2_Emissions',
-            hue='Decade', palette='YlOrRd',
-            edgecolor='black', legend=False)
-plt.title('Average CO2 Emissions by Decade',
-          fontsize=14, fontweight='bold')
-plt.xlabel('Decade')
-plt.ylabel('Average CO2 Emissions')
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.show()
- 
-print(" 6 plots displayed\n")
- 
-
 print("\n All visualizations displayed.\n")
 
 
@@ -276,77 +247,60 @@ print("=" * 65)
 print("  OBJECTIVE 6 : MACHINE LEARNING  (CRISP-DM)")
 print("=" * 65)
 
-FEATURES   = ['CO2_Emissions', 'Methane_Emissions', 'Sea_Level_Rise',
-              'Fossil_Fuel_Usage', 'Renewable_Energy_Usage', 'Policy_Score']
-df_ml = df[FEATURES + ['Average_Temperature', 'Emission_Category']].copy()
-df_ml = df_ml[df_ml['Emission_Category'] != 'Medium'].dropna()
-X = df_ml[FEATURES]
-y_reg = df_ml['Average_Temperature']
-y_cls = (df_ml['Emission_Category'] == 'High').astype(int)
-X_tr, X_te, yr_tr, yr_te, yc_tr, yc_te = train_test_split(
-    X, y_reg, y_cls, test_size=0.2, random_state=42)
+FEATURES = ['CO2_Emissions', 'Methane_Emissions', 'Sea_Level_Rise',
+            'Fossil_Fuel_Usage', 'Renewable_Energy_Usage', 'Policy_Score']
+df_ml = df[FEATURES + ['Average_Temperature']].dropna()
+X, y  = df_ml[FEATURES], df_ml['Average_Temperature']
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42)
 scaler  = StandardScaler()
 X_tr_sc = scaler.fit_transform(X_tr)
 X_te_sc = scaler.transform(X_te)
+print(f"\n  Train: {X_tr.shape[0]}  |  Test: {X_te.shape[0]}")
+ 
+# Linear Regression
+lr = LinearRegression()
+lr.fit(X_tr_sc, y_tr)
+y_pred = lr.predict(X_te_sc)
+mse = mean_squared_error(y_te, y_pred)
+print(f"\n-- Linear Regression --")
+print(f"  MSE={mse:.4f}  RMSE={np.sqrt(mse):.4f}  R2={r2_score(y_te, y_pred):.4f}")
+for f, c in zip(FEATURES, lr.coef_):
+    print(f"  {f:<28}: {c:+.4f}")
+ 
+# Actual vs Predicted plot
+plt.figure(figsize=(7, 4))
+plt.scatter(y_te, y_pred, alpha=0.3, color='steelblue', s=15)
+plt.plot([y_te.min(), y_te.max()], [y_te.min(), y_te.max()], 'r--', linewidth=2)
+plt.title('Linear Regression - Actual vs Predicted')
+plt.xlabel('Actual'); plt.ylabel('Predicted')
+plt.tight_layout(); plt.show()
+ 
+ 
 
 
  
-# Logistic Regression
-print("\n── 6.2  Logistic Regression : Classify CO2 Emission Level ──")
-lg = LogisticRegression(max_iter=500, random_state=42)
-lg.fit(X_tr_sc, yc_tr)
-yc_pred = lg.predict(X_te_sc)
-print(classification_report(yc_te, yc_pred, target_names=['Low', 'High']))
-
-print("\n[OBJ 6]  Complete\n")
- 
- 
-
-
-
 # =============================================================================
-#  OBJECTIVE 7 : TIME SERIES TREND ANALYSIS OF CO2 AND TEMPERATURE ANOMALY
-#  [UNIQUE] Uses rolling mean to smooth noise and reveal the real warming trend.
-#  Identifies the exact decade where CO2 acceleration began.
+# SECTION 7 : POLICY SCORE vs EMISSION CATEGORY (Inferential Statistics)
+# Unique column: Policy_Score — not used visually anywhere else.
+# Syllabus: Descriptive & Inferential Statistics
 # =============================================================================
-print("=" * 65)
-print("  OBJECTIVE 7 : TIME SERIES TREND ANALYSIS")
-print("=" * 65)
  
+# Descriptive: Policy_Score stats per emission group
+print("\n-- Policy Score by Emission Category --")
+print(df.groupby('Emission_Category')['Policy_Score']
+        .agg(['mean', 'median', 'std']).round(3))
  
-# Yearly averages + 10-year rolling mean
-ts = df.groupby('Year')[['CO2_Emissions', 'Temperature_Anomaly']].mean().reset_index()
-ts['CO2_Rolling10']  = ts['CO2_Emissions'].rolling(window=10, center=True).mean()
-ts['Temp_Rolling10'] = ts['Temperature_Anomaly'].rolling(window=10, center=True).mean()
- 
-print("\n── Yearly mean + 10-yr rolling mean (sample) ──")
-print(ts[['Year','CO2_Emissions','CO2_Rolling10',
-           'Temperature_Anomaly','Temp_Rolling10']].dropna().head().round(2))
- 
-# Plot — dual axis: CO2 and Temp Anomaly over time
-fig, ax1 = plt.subplots(figsize=(12, 5))
-ax2 = ax1.twinx()
-ax1.plot(ts['Year'], ts['CO2_Emissions'],
-         color='lightblue', alpha=0.4, linewidth=1)
-ax1.plot(ts['Year'], ts['CO2_Rolling10'],
-         color='steelblue', linewidth=2.5, label='CO2 Rolling Mean (10yr)')
-ax2.plot(ts['Year'], ts['Temperature_Anomaly'],
-         color='#f5b7b1', alpha=0.4, linewidth=1)
-ax2.plot(ts['Year'], ts['Temp_Rolling10'],
-         color='crimson',   linewidth=2.5, label='Temp Anomaly Rolling Mean (10yr)')
-ax1.set_xlabel('Year')
-ax1.set_ylabel('CO2 Emissions', color='steelblue')
-ax2.set_ylabel('Temperature Anomaly (C)', color='crimson')
-ax1.tick_params(axis='y', labelcolor='steelblue')
-ax2.tick_params(axis='y', labelcolor='crimson')
-lines1, labels1 = ax1.get_legend_handles_labels()
-lines2, labels2 = ax2.get_legend_handles_labels()
-ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', fontsize=9)
-plt.title('Time Series — CO2 & Temperature Anomaly (10-yr Rolling Mean)',
-          fontsize=13, fontweight='bold')
-plt.tight_layout();  plt.show()
- 
-print("\n[OBJ 7]  Complete\n")
+# Inferential: t-test — does Policy_Score differ between Low and High emitters?
+low_policy  = df[df['Emission_Category'] == 'Low' ]['Policy_Score']
+high_policy = df[df['Emission_Category'] == 'High']['Policy_Score']
+plt.figure(figsize=(9, 4))
+plt.hist(low_policy,  bins=40, alpha=0.6, color='#2ecc71', label='Low Emission',  density=True)
+plt.hist(high_policy, bins=40, alpha=0.6, color='#e74c3c', label='High Emission', density=True)
+plt.axvline(low_policy.mean(),  color='green', linestyle='--', linewidth=1.5, label=f'Low mean={low_policy.mean():.2f}')
+plt.axvline(high_policy.mean(), color='red',   linestyle='--', linewidth=1.5, label=f'High mean={high_policy.mean():.2f}')
+plt.title('Policy Score Distribution — Low vs High Emitters')
+plt.xlabel('Policy Score'); plt.ylabel('Density'); plt.legend()
+plt.tight_layout(); plt.show()
  
  
  
