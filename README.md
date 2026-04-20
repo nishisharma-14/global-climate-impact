@@ -119,6 +119,7 @@ Both scripts will:
 ## Notes
 
 - Make sure `global_warming_dataset.csv` is present in the same folder as the scripts before running.
+- Community: This repository follows a Code of Conduct. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for details.
 - If plots do not appear, verify that your Python environment supports GUI plotting (or run in an environment like VS Code with plotting support).
 
 ## Future Improvements
