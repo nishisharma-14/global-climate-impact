@@ -105,7 +105,7 @@ plt.show()
 print("\n All visualizations displayed.\n")
 
 #=============================================================================
-# Objective 1  - Exploring patterns, correlations and outliers in climate data
+# Objective 1  - Exploring pattern, correlations and outliers in climate data
 #=============================================================================
 
 
