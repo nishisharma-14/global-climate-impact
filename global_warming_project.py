@@ -13,6 +13,11 @@ sns.set_theme(style="whitegrid")
 plt.rcParams['figure.figsize'] = (10, 6)
 
 
+def safe_sample(series, n, random_state):
+    """Sample up to n values without failing on short series."""
+    return series.sample(min(n, len(series)), random_state=random_state)
+
+
 # Section 1 - Data Loading & Cleaning
 
 print("=" * 65)
@@ -155,8 +160,8 @@ print("  OBJECTIVE 2 : Testing whether CO2 emissions significantly changed after
 print("=" * 65)
 
 print("\n── 4 T-Test : CO2 Emissions — Pre-1980 vs Post-1980 ──")
-pre  = df[df['Era'] == 'Pre-1980' ]['CO2_Emissions'].sample(1000, random_state=1)
-post = df[df['Era'] == 'Post-1980']['CO2_Emissions'].sample(1000, random_state=2)
+pre  = safe_sample(df[df['Era'] == 'Pre-1980' ]['CO2_Emissions'], 1000, 1)
+post = safe_sample(df[df['Era'] == 'Post-1980']['CO2_Emissions'], 1000, 2)
 t_stat, t_p = ttest_ind(pre, post)
 print(f"  Pre-1980  mean  : {pre.mean():,.2f}")
 print(f"  Post-1980 mean  : {post.mean():,.2f}")
@@ -178,7 +183,7 @@ print("\n── 5  Normal Distribution — Temperature_Anomaly ──")
 mu, sigma = df['Temperature_Anomaly'].mean(), df['Temperature_Anomaly'].std()
 x_n = np.linspace(mu - 4*sigma, mu + 4*sigma, 300)
 plt.figure(figsize=(10, 5))
-plt.hist(df['Temperature_Anomaly'].sample(5000, random_state=1),
+plt.hist(safe_sample(df['Temperature_Anomaly'], 5000, 1),
          bins=50, density=True, color='steelblue', alpha=0.6, label='Empirical')
 plt.plot(x_n, norm.pdf(x_n, mu, sigma), 'r-', linewidth=2,
          label=f'Normal PDF  mu={mu:.2f}  sigma={sigma:.2f}')
