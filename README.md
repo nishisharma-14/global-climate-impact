@@ -1,2 +1,1 @@
-My python Project
-global warming
+NICe project by the way
