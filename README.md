@@ -27,6 +27,7 @@ The analysis is designed around practical climate questions:
 - `global_warming_dataset.csv` - Source dataset used in all analyses.
 - `global_warming_project.py` - Main, well-structured end-to-end analysis pipeline.
 - `INTPRO.py` - Extended version with additional objective blocks (including urbanization analysis).
+- `data_quality_checks.py` - Quick pre-analysis data validation report.
 - `README.md` - Project documentation.
 
 ## Tech Stack
@@ -73,6 +74,12 @@ Optional: run with unbuffered output to view logs in real time.
 
 ```bash
 python -u global_warming_project.py
+```
+
+Run data quality checks before full analysis:
+
+```bash
+python data_quality_checks.py
 ```
 
 Both scripts will:
